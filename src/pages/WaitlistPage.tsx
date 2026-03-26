@@ -20,6 +20,10 @@ function useWallet() {
     }
     const inj = connectors.find((c) => c.id === "injected");
     if (inj) { connect({ connector: inj }); return; }
+
+    // Desktop without extension — show WalletConnect QR modal
+    const wcConnector = connectors.find(c => c.id === 'walletConnect');
+    if (wcConnector) { connect({ connector: wcConnector }); return; }
     connect({ connector: connectors[0] });
   };
 
