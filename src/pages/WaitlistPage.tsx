@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { injected, walletConnect, coinbaseWallet, metaMask } from "wagmi/connectors";
 import { motion, AnimatePresence } from "framer-motion";
 import { joinWaitlist, getWaitlistCount } from "@/lib/supabase";
 
