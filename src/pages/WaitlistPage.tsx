@@ -3,7 +3,6 @@ import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
 import { joinWaitlist, updateWaitlistProfile, getWaitlistEntry } from "@/lib/supabase";
 
-// ─── Wagmi wallet hook ────────────────────────────────────────────────────────
 function useWallet() {
   const { address, isConnected } = useAccount();
   const { connect, connectors, isPending } = useConnect();
@@ -36,12 +35,11 @@ function useWallet() {
   return { address, isConnected, isConnecting: isPending, connectWallet, disconnect };
 }
 
-// ─── XP / Tier config ─────────────────────────────────────────────────────────
 const TASKS = [
-  { id: "follow_x",    label: "Follow @Pop_up_x on X",       xp: 50,  url: "https://x.com/Pop_up_x", cta: "Follow on X" },
-  { id: "retweet",     label: "Like & Retweet our pinned post", xp: 75, url: "https://x.com/Pop_up_x", cta: "Retweet" },
-  { id: "connect_x",   label: "Connect your X handle",        xp: 30,  url: null, cta: null },
-  { id: "connect_email", label: "Add your email",             xp: 40,  url: null, cta: null },
+  { id: "follow_x",      label: "Follow @Pop_up_x on X",          xp: 50, url: "https://x.com/Pop_up_x", cta: "Follow on X" },
+  { id: "retweet",       label: "Like and Retweet our pinned post", xp: 75, url: "https://x.com/Pop_up_x", cta: "Like and Retweet" },
+  { id: "connect_x",     label: "Connect your X handle",           xp: 30, url: null, cta: null },
+  { id: "connect_email", label: "Add your email",                  xp: 40, url: null, cta: null },
 ];
 
 const TIERS = [
@@ -56,10 +54,9 @@ function getTier(xp: number) {
 
 function XPBar({ xp }: { xp: number }) {
   const tier = getTier(xp);
-  const nextTier = TIERS[TIERS.findIndex((t) => t.name === tier.name) + 1];
-  const progress = nextTier
-    ? ((xp - tier.min) / (nextTier.min - tier.min)) * 100
-    : 100;
+  const tierIndex = TIERS.findIndex((t) => t.name === tier.name);
+  const nextTier = TIERS[tierIndex + 1];
+  const progress = nextTier ? ((xp - tier.min) / (nextTier.min - tier.min)) * 100 : 100;
 
   return (
     <div className="w-full">
@@ -72,7 +69,7 @@ function XPBar({ xp }: { xp: number }) {
       <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
-          animate={{ width: ${progress}% }}
+          animate={{ width: `${progress}%` }}
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="h-full rounded-full"
           style={{ backgroundColor: tier.color }}
@@ -87,11 +84,10 @@ function XPBar({ xp }: { xp: number }) {
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
 export default function WaitlistPage() {
   const { address, isConnected, isConnecting, connectWallet } = useWallet();
-const [step, setStep] = useState<"join" | "tasks" | "done">("join");
-  const [joinStatus, setJoinStatus] = useState<"idle" | "loading" | "duplicate">("idle");
+  const [step, setStep] = useState<"join" | "tasks">("join");
+  const [joinStatus, setJoinStatus] = useState<"idle" | "loading">("idle");
   const [xp, setXp] = useState(0);
   const [completedTasks, setCompletedTasks] = useState<string[]>([]);
   const [xHandle, setXHandle] = useState("");
@@ -99,7 +95,6 @@ const [step, setStep] = useState<"join" | "tasks" | "done">("join");
   const [saving, setSaving] = useState(false);
   const [savedFields, setSavedFields] = useState<string[]>([]);
 
-  // Check if already joined
   useEffect(() => {
     if (!address) return;
     getWaitlistEntry(address).then((entry) => {
@@ -117,14 +112,8 @@ const [step, setStep] = useState<"join" | "tasks" | "done">("join");
     if (!isConnected || !address) { connectWallet(); return; }
     setJoinStatus("loading");
     const { error } = await joinWaitlist(address);
-    if (error === "duplicate") {
-      setStep("tasks");
-      return;
-    }
-    if (error === "unknown") {
-      setJoinStatus("idle");
-      return;
-    }
+    if (error === "duplicate") { setStep("tasks"); setJoinStatus("idle"); return; }
+    if (error === "unknown") { setJoinStatus("idle"); return; }
     setJoinStatus("idle");
     setStep("tasks");
   };
@@ -145,9 +134,7 @@ const [step, setStep] = useState<"join" | "tasks" | "done">("join");
   const saveField = async (field: "x_handle" | "email", value: string, taskId: string, xpGain: number) => {
     if (!address || !value.trim()) return;
     setSaving(true);
-    const newTasks = completedTasks.includes(taskId)
-      ? completedTasks
-      : [...completedTasks, taskId];
+    const newTasks = completedTasks.includes(taskId) ? completedTasks : [...completedTasks, taskId];
     const newXp = completedTasks.includes(taskId) ? xp : xp + xpGain;
     setCompletedTasks(newTasks);
     setXp(newXp);
@@ -163,13 +150,11 @@ const [step, setStep] = useState<"join" | "tasks" | "done">("join");
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#f5f5f5] flex flex-col">
-
-      {/* Nav */}
       <nav className="sticky top-0 z-50 bg-[#0a0a0a] border-b border-white/5 flex items-center justify-between px-6 h-14">
         <span className="font-bold text-2xl text-[#FF3C00] tracking-wider">POPUP</span>
         {isConnected && (
           <span className="font-mono text-[0.6rem] tracking-[2px] uppercase text-[#6b7280] bg-white/5 px-3 py-1.5 rounded-full">
-            {address?.slice(0, 6)}…{address?.slice(-4)}
+            {address?.slice(0, 6)}...{address?.slice(-4)}
           </span>
         )}
       </nav>
@@ -177,7 +162,6 @@ const [step, setStep] = useState<"join" | "tasks" | "done">("join");
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-16 max-w-lg mx-auto w-full">
         <AnimatePresence mode="wait">
 
-          {/* ── Step 1: Join ── */}
           {step === "join" && (
             <motion.div
               key="join"
@@ -193,13 +177,13 @@ const [step, setStep] = useState<"join" | "tasks" | "done">("join");
               </h1>
 
               <p className="font-mono text-[0.65rem] tracking-[3px] uppercase text-[#6b7280] mb-10">
-                Early access for artists & collectors
+                Early access for artists and collectors
               </p>
 
               <div className="flex flex-col gap-3">
                 <div className="border border-white/10 px-5 py-4 font-mono text-xs tracking-[2px] uppercase text-left">
-{isConnected
-                    ? <span className="text-[#f5f5f5]">{address?.slice(0, 10)}…{address?.slice(-6)}</span>
+                  {isConnected
+                    ? <span className="text-[#f5f5f5]">{address?.slice(0, 10)}...{address?.slice(-6)}</span>
                     : <span className="text-[#6b7280]">Connect wallet to join</span>
                   }
                 </div>
@@ -209,13 +193,12 @@ const [step, setStep] = useState<"join" | "tasks" | "done">("join");
                   className="bg-[#FF3C00] text-white font-mono text-xs tracking-[2px] uppercase px-8 py-4 hover:-translate-y-0.5 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {!isConnected
-                    ? isConnecting ? "CONNECTING…" : "CONNECT WALLET"
-                    : joinStatus === "loading" ? "JOINING…" : "JOIN WAITLIST"
+                    ? (isConnecting ? "CONNECTING..." : "CONNECT WALLET")
+                    : (joinStatus === "loading" ? "JOINING..." : "JOIN WAITLIST")
                   }
                 </button>
               </div>
 
-              {/* Feature pills */}
               <div className="mt-12 flex flex-wrap justify-center gap-2">
                 {["NFT Drops", "POAP Campaigns", "Fan Subscriptions", "IP Investment", "Physical Merch"].map((label) => (
                   <span key={label} className="font-mono text-[0.55rem] tracking-[2px] uppercase text-[#6b7280] border border-white/5 px-3 py-1.5 rounded-full">
@@ -226,7 +209,6 @@ const [step, setStep] = useState<"join" | "tasks" | "done">("join");
             </motion.div>
           )}
 
-          {/* ── Step 2: Tasks ── */}
           {step === "tasks" && (
             <motion.div
               key="tasks"
@@ -235,52 +217,37 @@ const [step, setStep] = useState<"join" | "tasks" | "done">("join");
               exit={{ opacity: 0, y: -20 }}
               className="w-full"
             >
-              {/* Header */}
               <div className="text-center mb-8">
-                <div className="text-3xl font-bold text-[#FF3C00] mb-1">YOU'RE IN.</div>
+                <div className="text-3xl font-bold text-[#FF3C00] mb-1">YOU ARE IN.</div>
                 <p className="font-mono text-[0.6rem] tracking-[2px] uppercase text-[#6b7280]">
-                  Complete tasks to earn XP and unlock perks
+                  Complete tasks to earn XP and unlock perks at launch
                 </p>
               </div>
 
-              {/* XP Bar */}
               <div className="bg-white/5 border border-white/10 rounded-lg p-4 mb-6">
                 <XPBar xp={xp} />
               </div>
 
-              {/* Tasks */}
               <div className="space-y-3">
                 {TASKS.map((task) => {
                   const done = completedTasks.includes(task.id);
-
                   return (
                     <div
                       key={task.id}
-                      className={border rounded-lg p-4 transition-all duration-200 ${
-                        done
-                          ? "border-[#FF3C00]/30 bg-[#FF3C00]/5"
-                          : "border-white/10 bg-white/2"
-                      }}
+                      className={`border rounded-lg p-4 transition-all duration-200 ${done ? "border-[#FF3C00]/30 bg-[#FF3C00]/5" : "border-white/10"}`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <div className={h-5 w-5 rounded-full border flex items-center justify-center flex-shrink-0 ${
-                            done ? "bg-[#FF3C00] border-[#FF3C00]" : "border-white/20"
-                          }}>
-                            {done && <span className="text-white text-xs">✓</span>}
+                          <div className={`h-5 w-5 rounded-full border flex items-center justify-center flex-shrink-0 ${done ? "bg-[#FF3C00] border-[#FF3C00]" : "border-white/20"}`}>
+                            {done && <span className="text-white text-[10px]">✓</span>}
                           </div>
-                          <span className={text-sm font-medium ${done ? "text-[#f5f5f5]" : "text-[#f5f5f5]"}}>
-                            {task.label}
-                          </span>
+                          <span className="text-sm font-medium">{task.label}</span>
                         </div>
-                        <span className="font-mono text-xs text-[#FF3C00] ml-2 flex-shrink-0">
-                          +{task.xp} XP
-                        </span>
+                        <span className="font-mono text-xs text-[#FF3C00] ml-2 flex-shrink-0">+{task.xp} XP</span>
                       </div>
 
-                      {/* X handle input */}
                       {task.id === "connect_x" && !done && (
-<div className="flex gap-2 mt-2">
+                        <div className="flex gap-2 mt-2">
                           <input
                             type="text"
                             placeholder="@yourhandle"
@@ -293,12 +260,11 @@ const [step, setStep] = useState<"join" | "tasks" | "done">("join");
                             disabled={saving || !xHandle.trim()}
                             className="bg-[#FF3C00] text-white font-mono text-xs px-4 py-2 disabled:opacity-50"
                           >
-                            {saving ? "…" : "SAVE"}
+                            {saving ? "..." : "SAVE"}
                           </button>
                         </div>
                       )}
 
-                      {/* Email input */}
                       {task.id === "connect_email" && !done && (
                         <div className="flex gap-2 mt-2">
                           <input
@@ -313,12 +279,11 @@ const [step, setStep] = useState<"join" | "tasks" | "done">("join");
                             disabled={saving || !email.trim()}
                             className="bg-[#FF3C00] text-white font-mono text-xs px-4 py-2 disabled:opacity-50"
                           >
-                            {saving ? "…" : "SAVE"}
+                            {saving ? "..." : "SAVE"}
                           </button>
                         </div>
                       )}
 
-                      {/* External link tasks */}
                       {task.url && !done && (
                         <button
                           onClick={() => {
@@ -347,13 +312,14 @@ const [step, setStep] = useState<"join" | "tasks" | "done">("join");
               </p>
             </motion.div>
           )}
+
         </AnimatePresence>
       </main>
 
       <footer className="border-t border-white/5 px-6 py-6 flex justify-between items-center">
         <span className="font-bold text-lg text-[#FF3C00]">POPUP</span>
         <span className="font-mono text-[0.5rem] tracking-[2px] uppercase text-[#6b7280]">
-          © 2026 POPUP PLATFORM
+          2026 POPUP PLATFORM
         </span>
       </footer>
     </div>
