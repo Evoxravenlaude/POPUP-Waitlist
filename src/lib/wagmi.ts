@@ -1,11 +1,11 @@
-import { http, createConfig } from "wagmi";
 import { baseSepolia, base } from "wagmi/chains";
 import { createAppKit } from "@reown/appkit";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+import type { AppKitNetwork } from "@reown/appkit";
 
 const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "";
 
-export const networks = [baseSepolia, base] as const;
+export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [baseSepolia, base];
 
 export const wagmiAdapter = new WagmiAdapter({
   networks,
