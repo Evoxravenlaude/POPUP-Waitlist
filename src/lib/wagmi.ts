@@ -1,22 +1,32 @@
 import { http, createConfig } from "wagmi";
 import { baseSepolia, base } from "wagmi/chains";
-import { injected, coinbaseWallet, metaMask, walletConnect } from "wagmi/connectors";
+import { createAppKit } from "@reown/appkit";
+import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 
-const wcProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
-const baseSepoliaRpc = import.meta.env.VITE_BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org";
+const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "";
 
-export const wagmiConfig = createConfig({
-  chains: [baseSepolia, base],
-  connectors: [
-    injected(),
-    metaMask({ appName: "POPUP Waitlist" }),
-    coinbaseWallet({ appName: "POPUP Waitlist" }),
-    ...(wcProjectId && wcProjectId !== "your_walletconnect_project_id_here"
-      ? [walletConnect({ projectId: wcProjectId, showQrModal: true })]
-      : []),
-  ],
-  transports: {
-    [baseSepolia.id]: http(baseSepoliaRpc),
-    [base.id]: http("https://mainnet.base.org"),
-  },
+export const networks = [baseSepolia, base] as const;
+
+export const wagmiAdapter = new WagmiAdapter({
+  networks,
+  projectId,
+  ssr: false,
 });
+
+export const appKit = createAppKit({
+  adapters: [wagmiAdapter],
+  networks,
+  projectId,
+  metadata: {
+    name: "POPUP Waitlist",
+    description: "Drop it. Own it. Get paid.",
+    url: "https://early.pop-up.fun",
+    icons: ["https://early.pop-up.fun/favicon.ico"],
+  },
+  features: {
+    analytics: false,
+  },
+  themeMode: "dark",
+});
+
+export const wagmiConfig = wagmiAdapter.wagmiConfig;

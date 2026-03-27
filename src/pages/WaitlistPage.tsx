@@ -1,38 +1,14 @@
 import { useState, useEffect } from "react";
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useAccount, useDisconnect } from "wagmi";
+import { appKit } from "@/lib/wagmi";
 import { motion, AnimatePresence } from "framer-motion";
 import { joinWaitlist, updateWaitlistProfile, getWaitlistEntry } from "@/lib/supabase";
 
 function useWallet() {
   const { address, isConnected } = useAccount();
-  const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
-
-  const connectWallet = () => {
-    const isMobileWallet =
-      /MetaMask\//i.test(navigator.userAgent) ||
-      /TrustWallet|Trust|CoinbaseWallet|Coinbase|Phantom/i.test(navigator.userAgent) ||
-      Boolean((window as any).ethereum?.isMetaMask);
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth <= 768;
-
-    if (isMobile && isMobileWallet) {
-      const inj = connectors.find((c) => c.id === "injected");
-      if (inj) { connect({ connector: inj }); return; }
-    }
-    if (isMobile && !isMobileWallet) {
-      const wc = connectors.find((c) => c.id === "walletConnect");
-      if (wc) { connect({ connector: wc }); return; }
-    }
-    if ((window as any).ethereum) {
-      const inj = connectors.find((c) => c.id === "injected");
-      if (inj) { connect({ connector: inj }); return; }
-    }
-    const wc = connectors.find((c) => c.id === "walletConnect");
-    if (wc) { connect({ connector: wc }); return; }
-    if (connectors[0]) connect({ connector: connectors[0] });
-  };
-
-  return { address, isConnected, isConnecting: isPending, connectWallet, disconnect };
+  const connectWallet = () => appKit.open();
+  return { address, isConnected, isConnecting: false, connectWallet, disconnect };
 }
 
 const TASKS = [
