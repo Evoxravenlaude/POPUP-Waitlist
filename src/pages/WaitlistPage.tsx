@@ -93,7 +93,7 @@ export default function WaitlistPage() {
   const [xHandle, setXHandle] = useState("");
   const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
-  const [savedFields, setSavedFields] = useState<string[]>([]);
+  
 
   useEffect(() => {
     if (!address) return;
@@ -144,7 +144,7 @@ export default function WaitlistPage() {
       xp: newXp,
       tier: getTier(newXp).name,
     });
-    setSavedFields((prev) => [...prev, field]);
+    
     setSaving(false);
   };
 
